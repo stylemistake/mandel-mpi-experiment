@@ -1,2 +1,3 @@
-bin/mandel
-out.bin
+bin
+*.bin
+*.out

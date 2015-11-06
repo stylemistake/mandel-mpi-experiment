@@ -1,12 +1,20 @@
 # Makefile
 
+export CC_FLAGS := -std=c99 -lm -O3 -s -march=native -mtune=native
+
 .DEFAULT_GOAL := default
 .PHONY: default clean
 
 default: bin/mandel
+mpi: bin/mandel-mpi
 
 bin/mandel: src/main.c src/mandel.c
-	gcc -std=c99 -lm -O3 -march=native -mtune=native src/main.c -o bin/mandel
+	@mkdir -p bin
+	gcc $(CC_FLAGS) src/main.c -o bin/mandel
+
+bin/mandel-mpi: src/main_mpi.c src/mandel.c
+	@mkdir -p bin
+	mpicc $(CC_FLAGS) src/main_mpi.c -o bin/mandel-mpi
 
 clean:
-	rm -f bin/mandel out.bin
+	rm -rf bin *.bin *.out

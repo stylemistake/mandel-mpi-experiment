@@ -29,8 +29,8 @@ int main(int argc, char **argv) {
   int i;
 
   // Image metadata
-  uint32_t im_header[] = { im_width, im_height, sizeof(int) * 8 };
-  unsigned int im_buf[im_width * im_height];
+  uint32_t im_header[] = { im_width, im_height, sizeof(uint16_t) * 8 };
+  uint16_t im_buf[im_width * im_height];
 
   // MPI spawns a process cluster from right here
   ierr = MPI_Init(&argc, &argv);
@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
   );
 
   // Render the chunk into the target buffer
-  mandel_render_block(
+  mandel_render_block_uint16_t(
     im_buf, im_width, im_chunk_height,
     -im_width / 2, -im_height / 2 + im_chunk_offset,
     MANDEL_SCALE, MANDEL_SCALE,
@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
     );
 
     // Write chunk of the master process
-    fwrite(&im_buf, sizeof(int), im_width * im_chunk_height, stdout);
+    fwrite(&im_buf, sizeof(uint16_t), im_width * im_chunk_height, stdout);
     fflush(stdout);
 
     // Receive chunks from other processes
@@ -86,7 +86,7 @@ int main(int argc, char **argv) {
 
       // Receive the chunk
       ierr = MPI_Recv(
-        &im_buf, im_width * im_chunk_height, MPI_INT,
+        &im_buf, im_width * im_chunk_height, MPI_SHORT,
         i, TAG_CHUNK_DATA, MPI_COMM_WORLD, &status
       );
 
@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
       );
 
       // Write chunk
-      fwrite(&im_buf, sizeof(int), im_width * im_chunk_height, stdout);
+      fwrite(&im_buf, sizeof(uint16_t), im_width * im_chunk_height, stdout);
       fflush(stdout);
     }
 
@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
 
     // Send the chunk
     ierr = MPI_Send(
-      &im_buf, im_width * im_chunk_height, MPI_INT,
+      &im_buf, im_width * im_chunk_height, MPI_SHORT,
       0, TAG_CHUNK_DATA, MPI_COMM_WORLD
     );
 

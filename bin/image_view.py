@@ -22,9 +22,9 @@ def int_clamp(x, x_min, x_max):
     return int(max(x_min, min(x, x_max)))
 
 ## Map value to a color space of blues
-def heatmap_blues_from_value(value,
+def heatmap_blues(value,
     value_min = 0, value_max = 255,
-    color_span = 128):
+    color_span = 64):
   scale = (256.0 + float(color_span * 2)) / (value_max - value_min)
   value = scale * (value - value_min)
   return (
@@ -33,54 +33,60 @@ def heatmap_blues_from_value(value,
     int_clamp(value, 0, 255)
   )
 
+## Apply heatmap on values dict and returns a transform dict
+def apply_heatmap(values, heatmap_fn):
+  heatmap = {}
+  j = 0
+  for i in values:
+    heatmap[i] = heatmap_fn(j, value_max = len(values))
+    j += 1
+  return heatmap
+
 ## Input buffer (in our case: stdin)
 buf = sys.stdin.buffer
 
 ## Supported bits per pixel
-image_supported_bpp = [8, 16, 32];
+im_supported_bpp = [8, 16, 32];
 
 ## Read image header
 print('reading header...');
-image_width  = read_packed_uint(buf, 32)
-image_height = read_packed_uint(buf, 32)
-image_bpp    = read_packed_uint(buf, 32)
+im_width  = read_packed_uint(buf, 32)
+im_height = read_packed_uint(buf, 32)
+im_bpp    = read_packed_uint(buf, 32)
 
-if image_bpp not in image_supported_bpp:
-  print('bpp of', image_bpp, 'is not supported!')
+if im_bpp not in im_supported_bpp:
+  print('bpp of', im_bpp, 'is not supported!')
   exit(2)
 
 ## Create image object
-image = Image.new('RGB', (image_width, image_height), 'black')
-print('image:', image_width, image_height, image_bpp)
+image = Image.new('RGB', (im_width, im_height), 'black')
+print('image:', im_width, im_height, im_bpp)
 
 ## Initialize buffers and other stuff
-image_pixbuf = image.load()
-image_valbuf = [];
-image_valmin = math.inf;
-image_valmax = -math.inf;
+im_pixbuf = image.load()
+im_buf = []
+im_histogram = {}
 
-## Read from stdin to image_valbuf and determine min/max value
+## Read from stdin to im_buf and fill the histogram
 print('reading values...');
-for y in range(image_height):
-  for x in range(image_width):
-    value = read_packed_uint(buf, image_bpp);
-    image_valbuf.append(value);
-    if value < image_valmin:
-      image_valmin = value
-    if value > image_valmax:
-      image_valmax = value
+for y in range(im_height):
+  for x in range(im_width):
+    value = read_packed_uint(buf, im_bpp)
+    im_buf.append(value)
+    if value not in im_histogram:
+      im_histogram[value] = 1
 
-print('min:', image_valmin, ', max:', image_valmax)
+## A hack to show min/max of the histogram
+print('min:', list(im_histogram.keys())[0],
+    ', max:', list(im_histogram.keys())[len(im_histogram) - 1])
+
+print('generating heatmap...');
+im_heatmap = apply_heatmap(im_histogram, heatmap_blues)
 
 ## Put everything into an image
 print('creating image...');
-for y in range(image_height):
-  for x in range(image_width):
-    image_pixbuf[x, y] = heatmap_blues_from_value(
-      image_valbuf[y * image_width + x],
-      value_min = image_valmin,
-      value_max = image_valmax,
-      color_span = 64
-    )
+for y in range(im_height):
+  for x in range(im_width):
+    im_pixbuf[x, y] = im_heatmap[im_buf[y * im_width + x]];
 
 image.show()

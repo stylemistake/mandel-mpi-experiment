@@ -17,19 +17,19 @@ int main(int argc, char **argv) {
   const int im_height = IMAGE_HEIGHT;
 
   // Image metadata
-  uint32_t header[] = { im_width, im_height, sizeof(int) * 8 };
-  unsigned int buf[im_width];
+  uint32_t im_header[] = { im_width, im_height, 16 };
+  uint16_t im_buf[im_width];
 
   unsigned int i;
 
   // Write headers
-  fwrite(&header, sizeof(uint32_t), 3, stdout);
+  fwrite(&im_header, sizeof(uint32_t), 3, stdout);
   fflush(stdout);
 
   for (i = 0; i < im_width; i++) {
     // Fill the buffers
-    mandel_render_block(
-      buf, im_width, 1,
+    mandel_render_block_uint16_t(
+      im_buf, im_width, 1,
       -im_width / 2, -im_height / 2 + i,
       MANDEL_SCALE, MANDEL_SCALE,
       MANDEL_OFFSET_X, MANDEL_OFFSET_Y,
@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
     );
 
     // Write line
-    fwrite(&buf, sizeof(int), im_width, stdout);
+    fwrite(&im_buf, sizeof(uint16_t), im_width, stdout);
     fflush(stdout);
   }
 

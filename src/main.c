@@ -3,10 +3,18 @@
 
 #include "mandel.c"
 
+#define IMAGE_WIDTH 800
+#define IMAGE_HEIGHT 480
+
+#define MANDEL_SCALE 0.005
+#define MANDEL_OFFSET_X 2
+#define MANDEL_OFFSET_Y 0
+#define MANDEL_ITERATIONS 1024
+
 int main(int argc, char **argv) {
 
-  const int im_width = 800;
-  const int im_height = 480;
+  const int im_width = IMAGE_WIDTH;
+  const int im_height = IMAGE_HEIGHT;
 
   // Image metadata
   uint32_t header[] = { im_width, im_height, sizeof(int) * 8 };
@@ -23,9 +31,9 @@ int main(int argc, char **argv) {
     mandel_render_block(
       buf, im_width, 1,
       -im_width / 2, -im_height / 2 + i,
-      0.005, 0.005,
-      0, 0,
-      0.4, 0.0, 512
+      MANDEL_SCALE, MANDEL_SCALE,
+      MANDEL_OFFSET_X, MANDEL_OFFSET_Y,
+      0.4, 0.0, MANDEL_ITERATIONS
     );
 
     // Write line

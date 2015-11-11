@@ -1,6 +1,6 @@
 # Makefile
 
-export CC_FLAGS := -std=c99 -lm -O3 -s -march=native -mtune=native
+export CC_FLAGS := -std=c99 -lm -O3 -s -ffast-math -march=native -mtune=native
 
 .DEFAULT_GOAL := default
 .PHONY: default clean
@@ -17,4 +17,4 @@ bin/mandel-mpi: src/main_mpi.c src/mandel.c
 	mpicc $(CC_FLAGS) src/main_mpi.c -o bin/mandel-mpi
 
 clean:
-	rm -rf bin *.bin *.out
+	@rm -rf bin *.bin *.out

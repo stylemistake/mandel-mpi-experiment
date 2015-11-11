@@ -4,30 +4,38 @@ This is my attempt of making use of MPI for parallel processing.
 
 Dependends on:
 
+* GNU C Compiler 4.x
+* Python 3 (for `utils/view.py`)
+* Python PIL (for `utils/view.py`)
 * OpenMPI (optional)
-* Python 3 (for `image_decode.py`)
-* Python PIL (for `image_decode.py`)
 
-Run `make` to compile C source.
+Run `make` to compile.
 
 To generate and view the image:
 
 ```
-$ bin/mandel | bin/image_view.py
+$ bin/mandel | utils/view.py
 ```
 
-Using pipes is faster, but you can use an intermediate file if you want:
+You can also run this script for convenience:
 
 ```
-$ bin/mandel > out.bin
-$ cat out.bin | bin/image_view.py
+$ bash utils/run.sh
 ```
 
-You can also compile and run MPI version manually:
+Using pipes is faster, but you can use an intermediate file if you want, for
+example to transfer it between computers (with gzip compression):
 
 ```
-$ mpicc -std=c99 -lm -O3 -march=native -mtune=native src/main_mpi.c -o bin/mandel
-$ mpirun -np 2 bin/mandel > out.bin
+$ bin/mandel | gzip -9 > out.raw.gz
+$ zcat out.raw.gz | utils/view.py
+```
+
+You can also compile and run an MPI version:
+
+```
+$ make mpi
+$ mpirun -np 2 bin/mandel | gzip -9 > out.raw.gz
 
 proc-0: rendering chunk 0..400
 proc-1: rendering chunk 400..800
@@ -37,6 +45,8 @@ proc-0: writing chunk 0..400
 proc-0: receiving chunk 400..800
 proc-0: writing chunk 400..800
 ```
+
+Reference *slurm* batch file is located at `utils/batch-mpi.sh`.
 
 
 ## Contacts
